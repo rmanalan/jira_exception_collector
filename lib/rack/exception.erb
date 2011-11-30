@@ -1,0 +1,53 @@
+{code}
+Server Environment:
+===================
+
+Project root: <%=project_root %>
+Environment name: <%=framework_env %>
+
+
+Error:
+======
+
+Class: <%=error.class.name %>
+<%- if error.respond_to?(:message) -%>
+Message: <%=error.message %>
+<%- end -%>
+
+<%- if backtrace.respond_to?(:each) -%>
+<%- backtrace.each do |line| -%>
+<%=line.file %> [<%=line.method %>] (<%=line.number %>)
+<%- end -%>  
+<%- end -%>
+
+Request:
+========
+
+URL: <%=url %>
+
+<%- if params && params.any? -%>
+Request Parameters:
+-------------------
+
+<%- params.each do |key, value| -%>
+<%=key %>: <%=value %>
+<%- end -%>
+
+<%- end -%>
+<%- if session && session.any? -%>
+Session:
+========
+
+<%- session.each do |key, value| -%>
+<%=key %>: <%=value %>
+<%- end -%>
+
+<%- end -%>
+<%- if environment && environment.any? -%>
+Environment:
+============
+<%- environment.each do |key,value| -%>
+<%=key %>: <%=value %>
+<%- end -%>
+<%- end -%>
+{code}

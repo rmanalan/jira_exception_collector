@@ -1,18 +1,23 @@
-require 'rack/jira_notifier_version'
-require 'rack'
+require 'rack/jira_exception_collector_version'
+require 'net/http'
+require 'net/https'
+require 'uri'
 require 'erb'
+require 'ostruct'
 
 module Rack
-  class JiraNotifier
+  class JiraExceptionCollector
+
+    FILTER_REPLACEMENT = "[FILTERED]"
+
     class Error < StandardError; end
 
-    def initialize(app, api_key = nil, rack_environment = 'RACK_ENV')
+    def initialize(app, collector_url = nil, rack_environment = 'RACK_ENV')
       @app                 = app
-      @api_key             = api_key
+      @collector_url       = collector_url
       @report_under        = %w(staging production)
       @rack_environment    = rack_environment
-      @environment_filters = %w(AWS_ACCESS_KEY  AWS_SECRET_ACCESS_KEY AWS_ACCOUNT SSH_AUTH_SOCK)
-      @notifier_class      = Toadhopper
+      @filters             = %w(AWS_ACCESS_KEY AWS_SECRET_ACCESS_KEY AWS_ACCOUNT SSH_AUTH_SOCK PATH)
       @failsafe            = $stderr
       yield self if block_given?
     end
@@ -22,16 +27,15 @@ module Rack
         begin
           @app.call(env)
         rescue StandardError, LoadError, SyntaxError => boom
-          notified = send_notification boom, env
-          env['hoptoad.notified'] = notified
+          notified = send_exception boom, env
           raise
         end
-      send_notification env['rack.exception'], env if env['rack.exception']
+      send_exception env['rack.exception'], env if env['rack.exception']
       [status, headers, body]
     end
 
     def environment_filter_keys
-      @environment_filters.flatten
+      @filters.flatten
     end
 
     def environment_filter_regexps
@@ -41,32 +45,32 @@ module Rack
     end
     private
     def report?
-      report_under.include?(rack_env)
+      @report_under.include?(rack_env) || rack_env == "test"
     end
 
-    def send_notification(exception, env)
+    def send_exception(exception, env)
       return true unless report?
-      request      = Rack::Request.new(env)
+      request = Rack::Request.new(env)
+      env['rack.session'] = {:a => 1}
 
       options = {
-        :api_key           => api_key,
-        :url               => "#{request.scheme}://#{request.host}#{request.path}",
+        :url               => env['REQUEST_URI'],
         :params            => request.params,
-          :framework_env     => rack_env,
-          :notifier_name     => 'Rack::Hoptoad',
-          :notifier_version  => VERSION,
-          :environment       => environment_data_for(env),
-          :session           => env['rack.session']
+        :framework_env     => rack_env,
+        :notifier_name     => 'Rack::JiraExceptionCollector',
+        :notifier_version  => VERSION,
+        :environment       => environment_data_for(env),
+        :session           => env['rack.session']
       }
 
-      if result = toadhopper.post!(exception, options, {'X-Hoptoad-Client-Name' => 'Rack::Hoptoad'})
-        if result.errors.empty?
-          true
+      if result = post_to_jira(exception, options)
+        if result.code == "200"
+          env['jira.notified'] = true
         else
-          raise Error, "Status: #{result.status} #{result.errors.inspect}"
+          raise Error, "Status: #{result.code} #{result.body.inspect}"
         end
       else
-        raise Error, "No response from Toadhopper"
+        raise Error, "No response from JIRA"
       end
     rescue Exception => e
       return unless @failsafe
@@ -78,13 +82,71 @@ module Rack
     end
 
     def rack_env
-      ENV[rack_environment] || 'development'
+      ENV[@rack_environment] || 'development'
     end
 
-    def toadhopper
-      toad         = @notifier_class.new(api_key)
-      toad.filters = environment_filter_regexps
-      toad
+    def document_defaults(error)
+      {
+        :error            => error,
+        :environment      => ENV.to_hash,
+        :backtrace        => backtrace_for(error),
+        :url              => nil,
+        :request          => nil,
+        :params           => nil,
+        :notifier_version => VERSION,
+        :session          => {},
+        :framework_env    => ENV['RACK_ENV'] || 'development',
+        :project_root     => Dir.pwd
+      }
+    end
+
+    def document_data(error, options)
+      data = document_defaults(error).merge(options)
+      [:params, :session, :environment].each{|n| data[n] = clean(data[n]) if data[n] }
+      data
+    end
+
+    def document_for(exception, options={})
+      data = document_data(exception, options)
+      scope = OpenStruct.new(data).extend(ERB::Util)
+      scope.instance_eval ERB.new(notice_template, nil, '-').src
+    end    
+
+    def notice_template
+      ::File.read(::File.join(::File.dirname(__FILE__), 'exception.erb'))
+    end
+
+    BacktraceLine = Struct.new(:file, :number, :method)
+
+    def backtrace_for(error)
+      return "" unless error.respond_to? :backtrace
+      lines = Array(error.backtrace).map {|l| backtrace_line(l)}
+      if lines.empty?
+        lines << BacktraceLine.new("no-backtrace", "1", nil)
+      end
+      lines
+    end
+
+    def backtrace_line(line)
+      if match = line.match(%r{^(.+):(\d+)(?::in `([^']+)')?$})
+        BacktraceLine.new(*match.captures)
+      else
+        BacktraceLine.new(line, "1", nil)
+      end
+    end
+
+    def post_to_jira(exception,options={})
+      uri = URI.parse(@collector_url)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true if uri.scheme == "https"
+      request = Net::HTTP::Post.new(uri.request_uri)
+      request['X-JIRA-Client-Name'] = "Rack::JiraExceptionCollector"
+      error = document_for(exception, options)
+      request.set_form_data({ 
+        "description" => "#{exception.class.name}: #{exception.message}",
+        "webInfo" => error
+      })
+      response = http.request(request)
     end
 
     def environment_data_for(env)
@@ -96,6 +158,25 @@ module Rack
         data["rack[#{key.inspect}]"] = value.inspect
       end
       data
+    end
+
+    def clean(hash)
+      hash.inject({}) do |acc, (k, v)|
+        acc[k] = (v.is_a?(Hash) ? clean(v) : filtered_value(k,v))
+      acc
+      end
+    end
+
+    def filters
+      environment_filter_keys.flatten.compact
+    end
+
+    def filtered_value(key, value)
+      if filters.any? {|f| key.to_s =~ Regexp.new(f)}
+        FILTER_REPLACEMENT
+      else
+        value.to_s
+      end
     end
 
     def wrapped_key_for(key)
