@@ -1,6 +1,6 @@
 # JIRA Exception Collector
 
-![Travis CI](https://secure.travis-ci.org/manalang/jira_exception_collector.png?branch=master)
+[![Travis CI](https://secure.travis-ci.org/manalang/jira_exception_collector.png?branch=master)](http://travis-ci.org/manalang/jira_exception_collector)
 
 A gem that logs your exceptions as a JIRA issue. Once it's in JIRA, you can route it to
 the appropriate developer to fix the issue using JIRA's workflow engine.
