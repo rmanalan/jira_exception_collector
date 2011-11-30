@@ -9,11 +9,11 @@ the appropriate developer to fix the issue using JIRA's workflow engine.
 
 JIRA Exception Collector is a gem. To install:
 
-    gem install jira-exception-collector
+    gem install jira_exception_collector
 
 ... or, add this to your Gemfile:
 
-    gem jira-exception-collector
+    gem jira_exception_collector
 
 ... then:
 
