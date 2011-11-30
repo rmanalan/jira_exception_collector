@@ -53,7 +53,6 @@ module Rack
     def send_exception(exception, env)
       return true unless report?
       request = Rack::Request.new(env)
-      env['rack.session'] = {:a => 1}
 
       options = {
         :url               => env['REQUEST_URI'],
