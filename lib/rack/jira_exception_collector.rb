@@ -17,7 +17,7 @@ module Rack
       @collector_url       = collector_url
       @report_under        = %w(staging production)
       @rack_environment    = rack_environment
-      @filters             = %w(AWS_ACCESS_KEY AWS_SECRET_ACCESS_KEY AWS_ACCOUNT SSH_AUTH_SOCK PATH)
+      @filters             = %w(AWS_ACCESS_KEY AWS_SECRET_ACCESS_KEY AWS_ACCOUNT SSH_AUTH_SOCK)
       @failsafe            = $stderr
       yield self if block_given?
     end
