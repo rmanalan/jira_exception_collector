@@ -40,14 +40,14 @@ page).
 This gem works with any Rack based app. To configure it, first crack open your config.ru
 and add this before the `run` statement:
 
-````ruby
+````
 use Rack::JiraExceptionCollector, "[collector url]"
 ````
 
 By default, JIRA Exception Collector is enabled under production and staging environments.
 To modify this, just supply an array of the environments you want exceptions to be logged:
 
-````ruby
+````
 use Rack::JiraExceptionCollector, "[collector url]", %w(prod1 prod2 stage deploy)
 ````
 
