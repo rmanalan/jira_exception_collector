@@ -60,7 +60,7 @@ You can also configure filters to scrub out sensitive environment variables:
 use Rack::JiraExceptionCollector do |collector|
   collector.collector_url = "[collector url]"
   collector.report_under << "your_custom_env"
-  collector.filters << %w(SECRET_KEY SECRET_TOKEN)
+  collector.environment_filters << %w(SECRET_KEY SECRET_TOKEN)
 end
 ````
 

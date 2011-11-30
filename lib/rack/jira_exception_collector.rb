@@ -12,16 +12,18 @@ module Rack
 
     class Error < StandardError; end
 
-    attr_accessor :collector_url, :environment_filters, :report_under, :rack_environment, :failsafe
+    attr_accessor :collector_url, :environment_filters, :report_under, :rack_environment, 
+      :failsafe, :error
 
-    def initialize(app, collector_url = nil, rack_environment = 'RACK_ENV')
+    def initialize(app, collector_url = nil)
       @app                 = app
       @collector_url       = collector_url
       @report_under        = %w(production staging)
-      @rack_environment    = rack_environment
-      @filters             = %w(AWS_ACCESS_KEY AWS_SECRET_ACCESS_KEY AWS_ACCOUNT SSH_AUTH_SOCK)
+      @rack_environment    = "RACK_ENV"
+      @environment_filters = %w(AWS_ACCESS_KEY AWS_SECRET_ACCESS_KEY AWS_ACCOUNT SSH_AUTH_SOCK)
       @failsafe            = $stderr
       yield self if block_given?
+      raise(Error, "You need to provide a collector URL") unless @collector_url
     end
 
     def call(env)
@@ -37,7 +39,7 @@ module Rack
     end
 
     def environment_filter_keys
-      @filters.flatten
+      @environment_filters.flatten
     end
 
     def environment_filter_regexps
@@ -47,7 +49,7 @@ module Rack
     end
     private
     def report?
-      @report_under.include?(rack_env) || rack_env == "test"
+      @report_under.include?(rack_env)
     end
 
     def send_exception(exception, env)
@@ -142,10 +144,10 @@ module Rack
       http.use_ssl = true if uri.scheme == "https"
       request = Net::HTTP::Post.new(uri.request_uri)
       request['X-JIRA-Client-Name'] = "Rack::JiraExceptionCollector"
-      error = document_for(exception, options)
+      @error = document_for(exception, options)
       request.set_form_data({ 
         "description" => "#{exception.class.name}: #{exception.message}",
-        "webInfo" => error
+        "webInfo" => @error
       })
       response = http.request(request)
     end
