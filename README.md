@@ -3,6 +3,8 @@
 A gem that logs your exceptions as a JIRA issue. Once it's in JIRA, you can route it to
 the appropriate developer to fix the issue using JIRA's workflow engine.
 
+![https://img.skitch.com/20111130-b3f5rj9q95wh9txjrygyeaexn4.png]
+
 ## Installation
 
 JIRA Exception Collector is a gem. To install:
