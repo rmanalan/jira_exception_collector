@@ -53,7 +53,7 @@ use Rack::JiraExceptionCollector, "[collector url]", %w(prod1 prod2 stage deploy
 
 ## Compatibility with JIRA
 
-Because this gem relies on the [https://plugins.atlassian.com/583856](JIRA Issue Collector plugin),
+Because this gem relies on the [JIRA Issue Collector plugin](https://plugins.atlassian.com/583856),
 this gem is only compatible with the JIRA versions that the JIRA Issue Collector supports.
 
 ## Contributing
