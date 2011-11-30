@@ -43,7 +43,7 @@ This gem works with any Rack based app. To configure it, first crack open your c
 and add this before the `run` statement:
 
 ````ruby
-use Rack::JiraExceptionCollector, "[collector url]"
+use Rack::JiraExceptionCollector, "https://collector_url"
 ````
 
 By default, JIRA Exception Collector is enabled under production and staging environments.
@@ -51,7 +51,7 @@ To modify this, just supply an array of the environments you want exceptions to 
 inside the block syntax:
 
 ````ruby
-use Rack::JiraExceptionCollector, "[collector url]" do |collector|
+use Rack::JiraExceptionCollector, "https://collector_url" do |collector|
   collector.report_under << "your_custom_env"
 end
 ````
@@ -60,7 +60,7 @@ You can also configure filters to scrub out sensitive environment variables:
 
 ````ruby
 use Rack::JiraExceptionCollector do |collector|
-  collector.collector_url = "[collector url]"
+  collector.collector_url = "https://collector_url"
   collector.report_under << "your_custom_env"
   collector.environment_filters << %w(SECRET_KEY SECRET_TOKEN)
 end
