@@ -71,8 +71,9 @@ this gem is only compatible with the JIRA versions that the JIRA Issue Collector
 
 ## Contributing
 
-This is a pushmepullyou type of project. Fork it hard, push in your awesome sauce, then 
-send in your pull request. Oh, don't forget to add tests.
+This is a [pushmepullyou](http://amysuenathan.com/wp-content/uploads/2009/03/pushmepullyou.jpg) 
+type of project. Fork it hard, push in your awesome sauce, then send in your pull request. Oh, 
+don't forget to add tests.
 
 ## Copyright
 
