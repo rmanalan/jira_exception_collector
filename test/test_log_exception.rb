@@ -21,7 +21,7 @@ class Rack::JiraExceptionCollector::TestLogException < Test::Unit::TestCase
   def test_exception_can_be_sent_from_a_custom_env
     ENV['RACK_ENV'] = "my_custom_env"
     env = Rack::MockRequest.env_for('/?flip=crash', :method => 'GET')
-    collector = Rack::JiraExceptionCollector.new @app, @collector_url, "my_custom_env"
+    collector = Rack::JiraExceptionCollector.new(@app, @collector_url){|c| c.report_under << "my_custom_env"}
     assert_raise(RuntimeError) { collector.call(env) }
     assert_true env['jira.notified'], "JIRA exception created"
   end
