@@ -12,12 +12,11 @@ module Rack
 
     class Error < StandardError; end
 
-    def initialize(app, collector_url = nil, report_under = %w(staging production), 
-                   rack_environment = 'RACK_ENV')
+    def initialize(app, collector_url = nil, rack_environment = 'RACK_ENV')
       @app                 = app
       @collector_url       = collector_url
       @report_under        = report_under
-      @rack_environment    = rack_environment
+      @rack_environment    = %w(production staging)
       @filters             = %w(AWS_ACCESS_KEY AWS_SECRET_ACCESS_KEY AWS_ACCOUNT SSH_AUTH_SOCK)
       @failsafe            = $stderr
       yield self if block_given?

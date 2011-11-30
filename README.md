@@ -45,10 +45,23 @@ use Rack::JiraExceptionCollector, "[collector url]"
 ````
 
 By default, JIRA Exception Collector is enabled under production and staging environments.
-To modify this, just supply an array of the environments you want exceptions to be logged:
+To modify this, just supply an array of the environments you want exceptions to be logged
+inside the block syntax:
 
 ````
-use Rack::JiraExceptionCollector, "[collector url]", %w(prod1 prod2 stage deploy)
+use Rack::JiraExceptionCollector, "[collector url]" do |collector|
+  collector.report_under << "your_custom_env"
+end
+````
+
+You can also configure filters to scrub out sensitive environment variables:
+
+````
+use Rack::JiraExceptionCollector do |collector|
+  collector.collector_url = "[collector url]"
+  collector.report_under << "your_custom_env"
+  collector.filters << %w(SECRET_KEY SECRET_TOKEN)
+end
 ````
 
 ## Compatibility with JIRA
