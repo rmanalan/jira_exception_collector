@@ -20,7 +20,7 @@ JIRA Exception Collector is a gem. To install:
 
 ## Usage
 
-This gem utilizes the [https://plugins.atlassian.com/583856](JIRA Issue Collector plugin).
+This gem utilizes the [JIRA Issue Collector plugin](https://plugins.atlassian.com/583856).
 Make sure your JIRA instance has this plugin installed before using this gem.
 
 ## Setup an Issue Collector in JIRA
