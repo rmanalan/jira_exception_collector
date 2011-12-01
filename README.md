@@ -65,6 +65,18 @@ use Rack::JiraExceptionCollector do |collector|
 end
 ````
 
+## Configuration for Rails 3.x
+
+If you're using Rails, the configuration is a bit different. Instead of adding the config
+to config.ru, you'll need to add it to config/application.rb:
+
+````ruby
+config.middleware.use "Rack::JiraExceptionCollector" do |c|
+  c.collector_url = "https://collector_url"
+  c.rack_environment = "RAILS_ENV"
+end
+````
+
 ## Compatibility with JIRA
 
 Because this gem relies on the [JIRA Issue Collector plugin](https://plugins.atlassian.com/583856),
