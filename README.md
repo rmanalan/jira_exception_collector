@@ -38,7 +38,7 @@ page).
 
 ## Configure your Rack app with the Collector URL
 
-This gem works with any Rack based app. To configure it, first crack open your config.ru
+This gem works with any Rack based app. To configure it, first crack open your `config.ru`
 and add this before the `run` statement:
 
 ````ruby
@@ -68,7 +68,7 @@ end
 ## Configuration for Rails 3.x
 
 If you're using Rails, the configuration is a bit different. Instead of adding the config
-to config.ru, you'll need to add it to config/application.rb:
+to `config.ru`, you'll need to add it to `config/application.rb`:
 
 ````ruby
 config.middleware.use "Rack::JiraExceptionCollector" do |c|
